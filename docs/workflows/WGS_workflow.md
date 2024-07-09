@@ -1,10 +1,8 @@
 # WGS workflow using bwa-mem and GATK
 
-## Alignment
+FASTA files are often generated using multiple sequencing lanes (e.g., L1_R1.fq with L1_R2.fq and L2_R1.fq with L2_R2.fq). It is crucial to perform the alignment step on each lane separately, ensuring that specific read group (RG) tags are added to each lane. After alignment, duplicates should be removed or marked before merging the resulting BAM files for downstream processing. This strategy ensures accurate tracking of read group information, which is vital for subsequent analyses.
 
-Often times FASTA file are generated using multiple sequencing lanes (e.g., L1_R1.fq with L1_R2.fq and L2_R1.fq with L2_R2.fq). It is important to do the alignment step on each lane separately (making sure specific RG tags to each lane are added), remove or mark the duplicates, and only then merge the resulting BAM files for donwstream processing. This strategy ensures we can correctly track the "read group" (RG tag) information.
-
-### Indexing 
+## Genome Indexing 
 
 KMT: [bwa version 0.7.18-r1243-dirty cloned from GitHub on 07/05/2024](https://github.com/lh3/bwa)
 ```
@@ -16,9 +14,9 @@ JAX: [`bwa:0.7.17--hed695b0_6.`](https://github.com/TheJacksonLaboratory/cs-nf-p
 bwa index ${fasta}
 ```
 
-### Alignment
+## Alignment
 
-#### Read Groups '@RG'
+### Read Groups '@RG'
 
 When aligning NGS data, setting read group information is crucial, especially for the GATK pipeline used in variant calling. Read groups, indicated by '@RG', are not output by mappers and must be specified by the user during the alignment step. A typical read group format looks like this:
 
@@ -45,7 +43,7 @@ While read groups can be defined according to personal preference when working p
 
 - [JAX python script to collect read group info from FASTQ files](https://github.com/TheJacksonLaboratory/cs-nf-pipelines/blob/main/bin/shared/read_group_from_fastq.py)
 
-#### BWAMEM
+### BWAMEM
 
 KMT:
 ```
@@ -57,6 +55,20 @@ SM=$(echo ${sampleID} | cut -f 1-4 -d"_")
 PL=ILLUMINA
 
 ~/tools/bwa/bwa mem -K 100000000 -Y -t ${cpus} -R '@RG\tID:'$ID'\tLB:'$LB'\tSM:'$SM'\tPL:'$PL ${ref_indx} ${FASTA_R1} ${FASTA_R2} | ~/tools/samblaster/samblaster -a --addMateTags | samtools view -b -S - > ./BAMs/${sampleID}.bam
+```
+
+Followed by `java -Xmx16g -jar $picardtools SortSam` and `MarkDuplicates`, and `samtools sort` and `index.`
+
+```
+# sort by query name:
+java -Xmx16g -jar $picardtools SortSam I=./BAMs/${sampleID}.bam O=./BAMs/${sampleID}.qname.bam SORT_ORDER=queryname
+
+# mark duplicates:
+java -Xmx16g -jar $picardtools MarkDuplicates I=./BAMs/${sampleID}.qname.bam O=./BAMs/${sampleID}.mdups.bam M=./METRICS/${sampleID}.mdups_metrics.txt ASSUME_SORT_ORDER=queryname
+
+# and finally sort and index with samtools
+samtools sort -m 7680MiB -o ./BAMs/${sampleID}.mdups.sorted.bam ./BAMs/${sampleID}.mdups.bam
+samtools index ./BAMs/${sampleID}.mdups.sorted.bam ./BAMs/${sampleID}.mdups.sorted.bam.bai
 ```
 
 [JAX:](https://github.com/TheJacksonLaboratory/cs-nf-pipelines/blob/main/modules/bwa/bwa_mem_hla.nf)
