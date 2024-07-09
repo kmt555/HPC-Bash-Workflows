@@ -2,7 +2,8 @@
   * [Genome Indexing](#genome-indexing)
   * [Alignment](#alignment)
     + [Read Groups '@RG'](#read-groups---rg-)
-    + [BWAMEM](#bwamem)
+    + [Map and mark duplicates](#map-and-mark-duplicates)
+    + [Merge BAMs from multiple lanes](#merge-bams-from-multiple-lanes)
   * [Variant calling](#variant-calling)
   * [Usage](#usage)
 
@@ -50,7 +51,7 @@ While read groups can be defined according to personal preference when working p
 
 - https://www.biostars.org/p/280837/
 
-### BWAMEM
+### Map and mark duplicates
 
 The most critical aspect of setting up the alignment run is properly configuring the read group information. For example, given the following FASTA header `@LH00516:106:22C7F5LT4:1:1109:17508:16773 1:N:0:GTAAGCTCCA+TGTGCGGTAT`, we can set the RG tag as follows:
 
@@ -92,6 +93,10 @@ rg=\$(cat $read_groups)
 run-bwamem -t $task.cpus -R \${rg} -o ${sampleID}_${index} -H ${params.ref_fa_indices} $inputfq | sh
 ```
 
+### Merge BAMs from multiple lanes
+
+As specified above, we merge BAM files from multiple lanes to streamline downstream processing and ensure accurate variant calling.
+
 ## Variant calling
 
 In this workflow, GATK's HaplotypeCaller in GVCF mode for single-sample genotype calling is run. While the GVCF mode is particularly powerful for joint genotyping across multiple samples, it also offers several benefits when applied to single-sample variant calling. in particular, by using GVCF mode for single-sample analyses, one achieves both consistent methodology and the ability to efficiently scale your analysis to include additional samples in the future.
@@ -105,7 +110,6 @@ The benefits of running this workflow in GVCF mode are:
  * Scalability: If you start with single-sample analyses but plan to scale up to multi-sample analyses in the future, having GVCF files allows you to easily integrate new samples into a joint genotyping workflow.
  
  * Variant Recalibration: Generating GVCFs can facilitate more accurate variant recalibration and filtering because of the additional information captured in the GVCF.
-
 
 [JAX GATK workflow](https://github.com/TheJacksonLaboratory/cs-nf-pipelines/tree/main/modules/gatk)
 [JAX germline WGS nf](https://github.com/TheJacksonLaboratory/cs-nf-pipelines/blob/main/workflows/wgs.nf)
