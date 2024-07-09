@@ -56,7 +56,8 @@ While read groups can be defined according to personal preference when working p
 
 ### BWAMEM
 
-KMT:
+The most critical aspect of setting up the alignment run is properly configuring the read group information. For example, given the following FASTA header `@LH00516:106:22C7F5LT4:1:1109:17508:16773 1:N:0:GTAAGCTCCA+TGTGCGGTAT`, we can set the RG tag as follows:
+
 ```
 header=$(gunzip -c ${FASTA_R1} | head -n 1)
 
@@ -68,7 +69,7 @@ PL=ILLUMINA
 ~/tools/bwa/bwa mem -K 100000000 -Y -t ${cpus} -R '@RG\tID:'$ID'\tLB:'$LB'\tSM:'$SM'\tPL:'$PL ${ref_indx} ${FASTA_R1} ${FASTA_R2} | ~/tools/samblaster/samblaster -a --addMateTags | samtools view -b -S - > ./BAMs/${sampleID}.bam
 ```
 
-Followed by `java -Xmx16g -jar $picardtools SortSam` and `MarkDuplicates`, and `samtools sort` and `index.`
+This initial alignment step is followed by `java -Xmx16g -jar $picardtools SortSam` and `MarkDuplicates`, and `samtools sort` and `index.`
 
 ```
 # sort by query name:
