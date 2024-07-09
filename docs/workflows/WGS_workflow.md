@@ -1,3 +1,14 @@
+- [WGS workflow using bwa-mem and GATK](#wgs-workflow-using-bwa-mem-and-gatk)
+  * [Genome Indexing](#genome-indexing)
+  * [Alignment](#alignment)
+    + [Read Groups '@RG'](#read-groups---rg-)
+    + [BWAMEM](#bwamem)
+  * [Variant calling](#variant-calling)
+  * [Usage](#usage)
+
+<small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
+
+
 # WGS workflow using bwa-mem and GATK
 
 FASTA files are often generated using multiple sequencing lanes (e.g., L1_R1.fq with L1_R2.fq and L2_R1.fq with L2_R2.fq). It is crucial to perform the alignment step on each lane separately, ensuring that specific read group (RG) tags are added to each lane. After alignment, duplicates should be removed or marked before merging the resulting BAM files for downstream processing. This strategy ensures accurate tracking of read group information, which is vital for subsequent analyses.
