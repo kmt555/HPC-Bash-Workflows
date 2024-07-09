@@ -50,10 +50,6 @@ While read groups can be defined according to personal preference when working p
 
 - https://www.biostars.org/p/280837/
 
-- [JAX read groups](https://github.com/TheJacksonLaboratory/cs-nf-pipelines/blob/main/modules/utility_modules/read_groups.nf)
-
-- [JAX python script to collect read group info from FASTQ files](https://github.com/TheJacksonLaboratory/cs-nf-pipelines/blob/main/bin/shared/read_group_from_fastq.py)
-
 ### BWAMEM
 
 The most critical aspect of setting up the alignment run is properly configuring the read group information. For example, given the following FASTA header `@LH00516:106:22C7F5LT4:1:1109:17508:16773 1:N:0:GTAAGCTCCA+TGTGCGGTAT`, we can set the RG tag as follows:
@@ -83,7 +79,12 @@ samtools sort -m 7680MiB -o ./BAMs/${sampleID}.mdups.sorted.bam ./BAMs/${sampleI
 samtools index ./BAMs/${sampleID}.mdups.sorted.bam ./BAMs/${sampleID}.mdups.sorted.bam.bai
 ```
 
-[JAX:](https://github.com/TheJacksonLaboratory/cs-nf-pipelines/blob/main/modules/bwa/bwa_mem_hla.nf)
+[JAX:](https://github.com/TheJacksonLaboratory/cs-nf-pipelines/blob/main/modules/bwa/bwa_mem_hla.nf) has developed a Python script for read group assignment, which is a valuable resource to consider if the above method does not fully meet specific project needs:
+
+- [JAX read groups](https://github.com/TheJacksonLaboratory/cs-nf-pipelines/blob/main/modules/utility_modules/read_groups.nf)
+
+- [JAX python script to collect read group info from FASTQ files](https://github.com/TheJacksonLaboratory/cs-nf-pipelines/blob/main/bin/shared/read_group_from_fastq.py)
+
 ```
 container 'quay.io/biocontainers/bwakit:0.7.17.dev1--hdfd78af_1'
 
