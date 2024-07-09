@@ -6,37 +6,58 @@ Often times FASTA file are generated using multiple sequencing lanes (e.g., L1_R
 
 ### Indexing 
 
-JAX: [`bwa:0.7.17--hed695b0_6.`](https://github.com/TheJacksonLaboratory/cs-nf-pipelines/blob/main/modules/bwa/bwa_index.nf)
-
-```
-bwa index ${fasta}
-```
-
 KMT: [bwa version 0.7.18-r1243-dirty cloned from GitHub on 07/05/2024](https://github.com/lh3/bwa)
 ```
 ~/tools/bwa/bwa index -p GRCh38.v41 -a bwtsw ${graft_fasta}
 ```
 
+JAX: [`bwa:0.7.17--hed695b0_6.`](https://github.com/TheJacksonLaboratory/cs-nf-pipelines/blob/main/modules/bwa/bwa_index.nf)
+```
+bwa index ${fasta}
+```
+
 ### Alignment
 
-Adding read group information is an improtant step while aligning the reads. This is later used by GATK pipeline when calling variants.
+#### Read Groups '@RG'
 
-[JAX read groups](https://github.com/TheJacksonLaboratory/cs-nf-pipelines/blob/main/modules/utility_modules/read_groups.nf)
-[JAX python script to collect read group info from FASTQ files](https://github.com/TheJacksonLaboratory/cs-nf-pipelines/blob/main/bin/shared/read_group_from_fastq.py)
+When aligning NGS data, setting read group information is crucial, especially for the GATK pipeline used in variant calling. Read groups, indicated by '@RG', are not output by mappers and must be specified by the user during the alignment step. A typical read group format looks like this:
 
-Our fasta has this info:
 ```
-@LH00516:106:22C7F5LT4:1:1109:17508:16773 1:N:0:GTAAGCTCCA+TGTGCGGTAT
+'@RG\tID:'$ID'\tLB:'$LB'\tSM:'$SM'\tPL:'$PL
 ```
 
-JAX:
-```
-# Example id: HISEQ2000:190:D19U8ACXX:5:TAGCTT
-[...]
-line = '@RG\\tID:{0}{1}\\tLB:{0}{2}\\tSM:{3}\\tPL:ILLUMINA'.\
-```
+In this format, the variables store information about the sample and the sequencing run. The tags ID, LB, SM, and PL are separated by colons.
 
+- ID: This typically stores the flowcell name and lane number, and/or library information, ensuring global uniqueness across all sequencing runs.
+- LB: This is a library identifier. If DNA samples were sequenced across multiple lanes, this will be encoded by LB. This information is utilized by PicardTools' MarkDuplicates to mark potential molecular duplicates.
+- SM: This represents the sample name and will appear in the final VCF column. GATK processes all read groups with the same SM value as reads from the same biological sample. When sequencing the same sample multiple times, use a general name for the sample rather than individual replicate names.
+- PL: per GATK specification, vaild values are: ILLUMINA, SOLID, LS454, HELICOS and PACBIO.
 
+While read groups can be defined according to personal preference when working privately, it is essential to adopt a clear and consistent schema when collaborating with others. This ensures clarity and consistency in the data processing and analysis pipeline.
+
+**Related references:**
+
+- https://gatk.broadinstitute.org/hc/en-us/articles/360035890671-Read-groups
+
+- https://www.biostars.org/p/280837/
+
+- [JAX read groups](https://github.com/TheJacksonLaboratory/cs-nf-pipelines/blob/main/modules/utility_modules/read_groups.nf)
+
+- [JAX python script to collect read group info from FASTQ files](https://github.com/TheJacksonLaboratory/cs-nf-pipelines/blob/main/bin/shared/read_group_from_fastq.py)
+
+#### BWAMEM
+
+KMT:
+```
+header=$(gunzip -c ${FASTA_R1} | head -n 1)
+
+ID=$(echo $header | cut -f 1-4 -d":" | sed 's/@//' | sed 's/:/_/g' )
+LB=$(echo $header | cut -f 4 -d":")
+SM=$(echo ${sampleID} | cut -f 1-4 -d"_")
+PL=ILLUMINA
+
+~/tools/bwa/bwa mem -K 100000000 -Y -t ${cpus} -R '@RG\tID:'$ID'\tLB:'$LB'\tSM:'$SM'\tPL:'$PL ${ref_indx} ${FASTA_R1} ${FASTA_R2} | ~/tools/samblaster/samblaster -a --addMateTags | samtools view -b -S - > ./BAMs/${sampleID}.bam
+```
 
 [JAX:](https://github.com/TheJacksonLaboratory/cs-nf-pipelines/blob/main/modules/bwa/bwa_mem_hla.nf)
 ```
@@ -44,10 +65,6 @@ container 'quay.io/biocontainers/bwakit:0.7.17.dev1--hdfd78af_1'
 
 rg=\$(cat $read_groups)
 run-bwamem -t $task.cpus -R \${rg} -o ${sampleID}_${index} -H ${params.ref_fa_indices} $inputfq | sh
-```
-
-ME:
-```
 ```
 
 ## Variant calling
