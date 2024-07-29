@@ -46,12 +46,12 @@ chr10	133797422
 ...
 ```
 
-A more comprehensive analysis is also recommended, such as sequence comparison 
+A more comprehensive analysis is also recommended, such as sequence comparison:
 
 ```
 diff <(grep -v '^>' GRCh38.primary_assembly.genome.fa) <(grep -v '^>' Homo_sapiens_assembly38.fasta)
 ```
-or using specialzied tools like [MUMmer](https://mummer.sourceforge.net).
+or using specialized tools like [MUMmer](https://mummer.sourceforge.net).
 
 ## Genome indexing for read mapping
 
