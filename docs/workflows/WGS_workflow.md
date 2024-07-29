@@ -14,7 +14,45 @@
 
 FASTA files are often generated using multiple sequencing lanes (e.g., L1_R1.fq with L1_R2.fq and L2_R1.fq with L2_R2.fq). It is crucial to perform the alignment step on each lane separately, ensuring that specific read group (RG) tags are added to each lane. After alignment, duplicates should be removed or marked before merging the resulting BAM files for downstream processing. This strategy ensures accurate tracking of read group information, which is vital for subsequent analyses.
 
-## Genome Indexing 
+NOTE: Theoretically, it is possible to use Gencode GRCh38.primary_assembly with GATK hg38 bundle resources. However, one should ensure compatibility by verifying that the reference sequences, naming conventions, and coordinates match across all resources used in the analysis.
+
+**Example:** make sure that chromosome lengths are the same. Use `samtools faidx` to create fai files.
+
+```
+$ cut -f 1,2 /PATHTO/human_GRCh38.v41/GRCh38.primary_assembly.genome.fa.fai | head
+chr1	248956422
+chr2	242193529
+chr3	198295559
+chr4	190214555
+chr5	181538259
+chr6	170805979
+chr7	159345973
+chr8	145138636
+chr9	138394717
+chr10	133797422
+...
+
+$ cut -f 1,2 /PATHTO/GATK_Hg38_bundle/Homo_sapiens_assembly38.fasta.fai | head
+chr1	248956422
+chr2	242193529
+chr3	198295559
+chr4	190214555
+chr5	181538259
+chr6	170805979
+chr7	159345973
+chr8	145138636
+chr9	138394717
+chr10	133797422
+...
+```
+
+A more comprehensive analysis is also recommended, such as sequence comparison or using specialzied tools like [MUMmer](https://mummer.sourceforge.net)
+
+```
+diff <(grep -v '^>' GRCh38.primary_assembly.genome.fa) <(grep -v '^>' Homo_sapiens_assembly38.fasta)
+```
+
+## Genome indexing for read mapping
 
 KMT: [bwa version 0.7.18-r1243-dirty cloned from GitHub on 07/05/2024](https://github.com/lh3/bwa)
 ```
