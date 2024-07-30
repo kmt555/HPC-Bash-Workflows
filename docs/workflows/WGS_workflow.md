@@ -1,14 +1,14 @@
 - [WGS workflow using bwa-mem and GATK](#wgs-workflow-using-bwa-mem-and-gatk)
-  * [Genome Indexing](#genome-indexing)
+  * [Genome indexing for read mapping](#genome-indexing-for-read-mapping)
   * [Alignment](#alignment)
     + [Read Groups '@RG'](#read-groups---rg-)
     + [Map and mark duplicates](#map-and-mark-duplicates)
     + [Merge BAMs from multiple lanes](#merge-bams-from-multiple-lanes)
-  * [Variant calling](#variant-calling)
+  * [Genome VCF (Variant Call Format)](#genome-vcf--variant-call-format-)
+  * [VCF](#vcf)
   * [Usage](#usage)
 
 <small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
-
 
 # WGS workflow using bwa-mem and GATK
 
