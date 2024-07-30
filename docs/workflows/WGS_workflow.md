@@ -136,9 +136,13 @@ run-bwamem -t $task.cpus -R \${rg} -o ${sampleID}_${index} -H ${params.ref_fa_in
 
 As specified above, we merge BAM files from multiple lanes to streamline downstream processing and ensure accurate variant calling.
 
-## Variant calling
+## Genome VCF (Variant Call Format)
 
-In this workflow, GATK's HaplotypeCaller in GVCF mode for single-sample genotype calling is run. While the GVCF mode is particularly powerful for joint genotyping across multiple samples, it also offers several benefits when applied to single-sample variant calling. in particular, by using GVCF mode for single-sample analyses, one achieves both consistent methodology and the ability to efficiently scale your analysis to include additional samples in the future.
+In this workflow, GATK's HaplotypeCaller in GVCF mode for single-sample genotype calling is run. 
+
+The GVCF format is an extension of the standard VCF format. Unlike standard VCFs, which only include positions with variants, GVCFs include genotype information for all positions in the genome. This helps to accurately call variants in a joint analysis step. GVCFs are particularly useful when performing joint genotyping across multiple samples, allowing one to combine information from different samples into a single, comprehensive dataset.
+
+While the GVCF mode is particularly powerful for joint genotyping across multiple samples, it also offers several benefits when applied to single-sample variant calling. In particular, by using GVCF mode for single-sample analyses, one achieves both consistent methodology and the ability to efficiently scale the analysis to include additional samples in the future.
 
 The benefits of running this workflow in GVCF mode are:
 
@@ -153,7 +157,25 @@ The benefits of running this workflow in GVCF mode are:
 [JAX GATK workflow](https://github.com/TheJacksonLaboratory/cs-nf-pipelines/tree/main/modules/gatk)
 [JAX germline WGS nf](https://github.com/TheJacksonLaboratory/cs-nf-pipelines/blob/main/workflows/wgs.nf)
 [JAX somatic WES nf](https://github.com/TheJacksonLaboratory/cs-nf-pipelines/blob/main/workflows/somatic_wes.nf)
- 
+
+## VCF
+
+When dealing with the `HaplotypeCaller` output in GATK, we have two main options for proceeding with genotyping and obtaining the final VCF:
+
+1. Combine GVCFs and Genotype Together:
+   - Use `CombineGVCFs` to merge the per-chromosome GVCF files into a single GVCF file.
+   - Run `GenotypeGVCFs` on the combined GVCF file to produce the final VCF.
+
+2. Genotype Each Chromosome and Then Gather:
+   - Run `GenotypeGVCFs` on each per-chromosome GVCF file separately to produce individual VCF files for each chromosome.
+   - Use `GatherVcfs` to merge the individual chromosome VCF files into a final VCF file.
+
+Genotyping each chromosome separately and then gathering the results, is generally faster (option 2). This approach allows for better parallelization of the resource-intensive GenotypeGVCFs step. 
+
+Moreover, GatherVcfs is typically faster and less resource-intensive than CombineGVCFs, as it mainly deals with concatenating files rather than reprocessing the data.
+
+**Recommended Approach:** If the available computational environment supports parallel processing, it's best to go with genotyping each chromosome separately followed by gathering the VCFs. This method tends to be more efficient both in terms of time and resource usage.
+
 ## Usage
 
 To run WGS workflow look follow the following:
